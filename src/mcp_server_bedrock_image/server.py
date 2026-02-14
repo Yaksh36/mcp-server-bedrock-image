@@ -68,21 +68,45 @@ def _output_dir() -> str:
 
 @mcp.tool(name="generate_image")
 async def tool_generate_image(
-    prompt: str = Field(description="Text description of the image to generate (max 10000 chars)"),
-    negative_prompt: Optional[str] = Field(default=None, description="What to exclude from the image"),
-    aspect_ratio: Optional[str] = Field(default=None, description="Aspect ratio, e.g. '16:9', '1:1', '9:16'"),
+    prompt: str = Field(
+        description="Text description of the image to generate (max 10000 chars)"
+    ),
+    negative_prompt: Optional[str] = Field(
+        default=None, description="What to exclude from the image"
+    ),
+    aspect_ratio: Optional[str] = Field(
+        default=None, description="Aspect ratio, e.g. '16:9', '1:1', '9:16'"
+    ),
     seed: Optional[int] = Field(default=None, description="Seed for reproducibility"),
-    filename: Optional[str] = Field(default=None, description="Output filename without extension"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    filename: Optional[str] = Field(
+        default=None, description="Output filename without extension"
+    ),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Generate a high-quality image using Stable Image Ultra on Bedrock."""
-    body = build_generate_body(prompt=prompt, negative_prompt=negative_prompt, aspect_ratio=aspect_ratio, seed=seed)
+    body = build_generate_body(
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+        aspect_ratio=aspect_ratio,
+        seed=seed,
+    )
     response = _get_bedrock().invoke_model(model_id=MODELS["ultra"], body=body)
     images, seeds = parse_generate_response(response)
     out = output_dir or _output_dir()
     paths = [save_image(img, output_dir=out, filename=filename) for img in images]
     if SAVE_METADATA:
-        save_metadata({"prompt": prompt, "negative_prompt": negative_prompt, "model": "ultra", "seeds": seeds}, output_dir=out, filename=filename)
+        save_metadata(
+            {
+                "prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "model": "ultra",
+                "seeds": seeds,
+            },
+            output_dir=out,
+            filename=filename,
+        )
     return {"status": "success", "paths": paths, "seeds": seeds}
 
 
@@ -93,16 +117,27 @@ async def tool_generate_image_core(
     aspect_ratio: Optional[str] = Field(default=None, description="Aspect ratio"),
     seed: Optional[int] = Field(default=None, description="Seed"),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Generate an image using Stable Image Core (faster, lower cost)."""
-    body = build_generate_body(prompt=prompt, negative_prompt=negative_prompt, aspect_ratio=aspect_ratio, seed=seed)
+    body = build_generate_body(
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+        aspect_ratio=aspect_ratio,
+        seed=seed,
+    )
     response = _get_bedrock().invoke_model(model_id=MODELS["core"], body=body)
     images, seeds = parse_generate_response(response)
     out = output_dir or _output_dir()
     paths = [save_image(img, output_dir=out, filename=filename) for img in images]
     if SAVE_METADATA:
-        save_metadata({"prompt": prompt, "model": "core", "seeds": seeds}, output_dir=out, filename=filename)
+        save_metadata(
+            {"prompt": prompt, "model": "core", "seeds": seeds},
+            output_dir=out,
+            filename=filename,
+        )
     return {"status": "success", "paths": paths, "seeds": seeds}
 
 
@@ -110,12 +145,16 @@ async def tool_generate_image_core(
 async def tool_remove_background(
     image_path: str = Field(description="Path to the image file"),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Remove the background from an image."""
     image_b64 = _read_image_as_b64(image_path)
     body = build_remove_background_body(image=image_b64)
-    response = _get_bedrock().invoke_model(model_id=MODELS["remove_background"], body=body)
+    response = _get_bedrock().invoke_model(
+        model_id=MODELS["remove_background"], body=body
+    )
     images, _ = parse_generate_response(response)
     out = output_dir or _output_dir()
     paths = [save_image(img, output_dir=out, filename=filename) for img in images]
@@ -129,12 +168,19 @@ async def tool_style_transfer(
     style_image_path: str = Field(description="Path to the style reference image"),
     negative_prompt: Optional[str] = Field(default=None, description="What to exclude"),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Apply the style of a reference image to a source image."""
     image_b64 = _read_image_as_b64(image_path)
     style_b64 = _read_image_as_b64(style_image_path)
-    body = build_style_transfer_body(prompt=prompt, image=image_b64, style_image=style_b64, negative_prompt=negative_prompt)
+    body = build_style_transfer_body(
+        prompt=prompt,
+        image=image_b64,
+        style_image=style_b64,
+        negative_prompt=negative_prompt,
+    )
     response = _get_bedrock().invoke_model(model_id=MODELS["style_transfer"], body=body)
     images, _ = parse_generate_response(response)
     out = output_dir or _output_dir()
@@ -147,13 +193,22 @@ async def tool_search_and_recolor(
     image_path: str = Field(description="Path to the image file"),
     prompt: str = Field(description="Description of the scene"),
     select_prompt: str = Field(description="What to select for recoloring"),
-    recolor_prompt: str = Field(description="New color/appearance for the selected element"),
+    recolor_prompt: str = Field(
+        description="New color/appearance for the selected element"
+    ),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Recolor specific elements in an image."""
     image_b64 = _read_image_as_b64(image_path)
-    body = build_recolor_body(image=image_b64, prompt=prompt, select_prompt=select_prompt, recolor_prompt=recolor_prompt)
+    body = build_recolor_body(
+        image=image_b64,
+        prompt=prompt,
+        select_prompt=select_prompt,
+        recolor_prompt=recolor_prompt,
+    )
     response = _get_bedrock().invoke_model(model_id=MODELS["recolor"], body=body)
     images, _ = parse_generate_response(response)
     out = output_dir or _output_dir()
@@ -170,11 +225,15 @@ async def tool_outpaint(
     top: int = Field(default=0, description="Pixels to extend top"),
     bottom: int = Field(default=0, description="Pixels to extend bottom"),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Extend an image in any direction while maintaining visual consistency."""
     image_b64 = _read_image_as_b64(image_path)
-    body = build_outpaint_body(image=image_b64, prompt=prompt, left=left, right=right, top=top, bottom=bottom)
+    body = build_outpaint_body(
+        image=image_b64, prompt=prompt, left=left, right=right, top=top, bottom=bottom
+    )
     response = _get_bedrock().invoke_model(model_id=MODELS["outpaint"], body=body)
     images, _ = parse_generate_response(response)
     out = output_dir or _output_dir()
@@ -188,11 +247,15 @@ async def tool_search_and_replace(
     prompt: str = Field(description="What to replace with"),
     search_prompt: str = Field(description="What to find and replace"),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Replace objects or elements in an image."""
     image_b64 = _read_image_as_b64(image_path)
-    body = build_search_replace_body(image=image_b64, prompt=prompt, search_prompt=search_prompt)
+    body = build_search_replace_body(
+        image=image_b64, prompt=prompt, search_prompt=search_prompt
+    )
     response = _get_bedrock().invoke_model(model_id=MODELS["search_replace"], body=body)
     images, _ = parse_generate_response(response)
     out = output_dir or _output_dir()
@@ -204,7 +267,9 @@ async def tool_search_and_replace(
 async def tool_upscale_fast(
     image_path: str = Field(description="Path to the image file"),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Upscale image resolution by 4x."""
     image_b64 = _read_image_as_b64(image_path)
@@ -222,12 +287,18 @@ async def tool_upscale_creative(
     prompt: str = Field(description="Description to guide creative upscaling"),
     negative_prompt: Optional[str] = Field(default=None, description="What to exclude"),
     filename: Optional[str] = Field(default=None, description="Output filename"),
-    output_dir: Optional[str] = Field(default=None, description="Override output directory"),
+    output_dir: Optional[str] = Field(
+        default=None, description="Override output directory"
+    ),
 ) -> dict:
     """Creatively upscale image up to 4K resolution."""
     image_b64 = _read_image_as_b64(image_path)
-    body = build_upscale_creative_body(image=image_b64, prompt=prompt, negative_prompt=negative_prompt)
-    response = _get_bedrock().invoke_model(model_id=MODELS["upscale_creative"], body=body)
+    body = build_upscale_creative_body(
+        image=image_b64, prompt=prompt, negative_prompt=negative_prompt
+    )
+    response = _get_bedrock().invoke_model(
+        model_id=MODELS["upscale_creative"], body=body
+    )
     images, _ = parse_generate_response(response)
     out = output_dir or _output_dir()
     paths = [save_image(img, output_dir=out, filename=filename) for img in images]
@@ -240,7 +311,9 @@ async def tool_compose_branded(
     logo_path: str = Field(description="Path to the logo file (RGBA PNG)"),
     output_path: str = Field(description="Where to save the branded image"),
     logo_variant: str = Field(default="auto", description="'light', 'dark', or 'auto'"),
-    logo_scale: float = Field(default=0.08, description="Logo size as fraction of image width"),
+    logo_scale: float = Field(
+        default=0.08, description="Logo size as fraction of image width"
+    ),
 ) -> dict:
     """Overlay logo with composition-aware placement."""
     path = compose_branded_image(

@@ -6,3 +6,5 @@ dist/
 *.egg-info/
 output/
 .env
+.firecrawl/
+.pytest_cache/

@@ -5,6 +5,19 @@ description = "MCP Server for Stability AI image generation on AWS Bedrock"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
+authors = [
+    {name = "Yaksh Patel"},
+]
+keywords = ["mcp", "bedrock", "stability-ai", "image-generation", "aws"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics",
+]
 dependencies = [
     "mcp[cli]>=1.0.0",
     "boto3>=1.35.0",
@@ -13,6 +26,11 @@ dependencies = [
     "numpy>=1.26.0",
     "requests>=2.31.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Yaksh36/mcp-server-bedrock-image"
+Repository = "https://github.com/Yaksh36/mcp-server-bedrock-image"
+Issues = "https://github.com/Yaksh36/mcp-server-bedrock-image/issues"
 
 [project.scripts]
 mcp-server-bedrock-image = "mcp_server_bedrock_image.server:main"
